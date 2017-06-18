@@ -38,6 +38,5 @@ Account id   = {$account->getId()}
 Account name = {$account->getName()}
 Created      = {$account->getCreated()}
 Updated      = {$account->getUpdated()}
-</pre>
 OUT;
 }
