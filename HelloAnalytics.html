@@ -28,7 +28,8 @@
     var authData = {
       client_id: CLIENT_ID,
       scope: SCOPES,
-      immediate: useImmdiate
+      immediate: useImmdiate,
+      ux_mode: "popup"
     };
 
     gapi.auth.authorize(authData, function(response) {
