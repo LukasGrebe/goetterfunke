@@ -6,12 +6,20 @@ if (php_sapi_name() != 'cli') {
     throw new Exception('This application must be run on the command line.');
 }
 
-require __DIR__ . '/vendor/autoload.php';
-require_once __DIR__ . '/getClient.php';
-require_once __DIR__ . '/listAccounts.php';
-
-
+require 'vendor/autoload.php';
+require_once 'getClient.php';
+require_once 'list.php';
+require_once 'customDimensions.php';
 
 $client = new Google_Service_Analytics(getClient('client_credentials.json'));
 
-listAccounts($client);
+
+switch($argv[1]){
+    case 'cd':
+        listCustomDimensionsAsJSON($client,$argv[2],$argv[3]);
+    break;
+    case 'list':
+        listProperties($client);
+    break;
+}
+
