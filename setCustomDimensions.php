@@ -1,12 +1,6 @@
 <?php
-date_default_timezone_set ( 'Europe/Berlin');
-error_reporting(E_ALL);
 
-require_once './vendor/autoload.php';
-
-putenv('GOOGLE_APPLICATION_CREDENTIALS=./credentials/Goetterfunke.json');
-
-$client = new Google_Client();
+require_once './goetterfunke.php';
 
 if(count($argv)<3){
 	die('usage: ' .  __FILE__ . ' <acount id (123)> <property id (ua-123-4)> <debug>');
@@ -21,18 +15,8 @@ if(array_key_exists(3, $argv)){
 	$client->setHttpClient($httpClient);
 }
 
-$client->useApplicationDefaultCredentials();
-
-
-//Setup service
-$client->addScope(Google_Service_Analytics::ANALYTICS);
-$client->addScope(Google_Service_Analytics::ANALYTICS_EDIT);
-$client->addScope(Google_Service_Analytics::ANALYTICS_READONLY);
-
-$analytics = new Google_Service_Analytics($client);
-
 //Load "truth"
-$dimensionsSetup = json_decode(file_get_contents("./customDimensions.json"),true);
+$dimensionsSetup = json_decode(file_get_contents("./configuration/customDimensions.json"),true);
 
 //Target Property
 $account = $argv[1];
@@ -42,6 +26,8 @@ $property = $argv[2];
 //Load current Properties
 $customDimensions = $analytics->management_customDimensions->listManagementCustomDimensions($account, $property);
 
+var_dump($customDimensions);
+die();
 
 function fullName($name,$index,$scope){
 	return $name . ' - CD' . $index . lcfirst($scope)[0];
