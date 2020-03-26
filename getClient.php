@@ -12,7 +12,7 @@ function getClient($credentialsFileName)
     $client->addScope(Google_Service_Analytics::ANALYTICS_EDIT);
     $client->addScope(Google_Service_Analytics::ANALYTICS_READONLY);
     
-    $client->setAuthConfig('/credentials/' . $credentialsFileName);
+    $client->setAuthConfig(__dir__ . '/credentials/' . $credentialsFileName);
     $client->setAccessType('offline');
     $client->setPrompt('select_account consent');
 
@@ -20,7 +20,7 @@ function getClient($credentialsFileName)
     // The file token.json stores the user's access and refresh tokens, and is
     // created automatically when the authorization flow completes for the first
     // time.
-    $tokenPath = '/credentials/token.json';
+    $tokenPath = __dir__ . '/credentials/token.json';
     if (file_exists($tokenPath)) {
         $accessToken = json_decode(file_get_contents($tokenPath), true);
         $client->setAccessToken($accessToken);
