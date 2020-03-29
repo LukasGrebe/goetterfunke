@@ -16,11 +16,18 @@ $analyticsService = new Google_Service_Analytics($client);
 
 
 switch($argv[1]){
-    case 'listCDs':
-        listCustomDimensionsAsJSON($analyticsService,$argv[2],$argv[3]);
+    case 'getCDsJSON':
+        $customDimensions = getCustomDimensions($analyticsService,$argv[2],$argv[3]);
+        print json_encode($customDimensions,JSON_PRETTY_PRINT);
     break;
     case 'setCDs': 
-        setCustomDiemensionsFromJSON($analyticsService,$client,$argv[2],$argv[3],$argv[4],!isset($argv[5]));       
+        //get a delta
+        $is = getCustomDimensions($analyticsService,$argv[2],$argv[3]);
+        $should = json_decode(file_get_contents(__DIR__ . '/' . $argv[4]),true);
+
+        $client->setUseBatch(true);
+        $changes = createChangeRequets($analyticsService,$is,$should);
+        executeThrottledBatch($client, $analyticsService, $changes);
         
     break;
     case 'listProperties':

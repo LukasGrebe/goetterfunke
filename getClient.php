@@ -1,5 +1,30 @@
 <?php
 
+function executeThrottledBatch($client, $service, $requests){
+    $maxBatchSize = 10;
+    
+    
+    $batchSize = 0;
+    $batch = $service->createBatch();
+    foreach ($requests as $index => $request) {
+        $batch->add($request, $index);
+        $batchCount ++;
+        if($batchSize >= $maxBatchSize){
+        break;
+        }
+    }
+
+    $results = $batch->execute();
+    foreach ($results as $result => $obj) {
+        if(get_class($obj) === "Google_Service_Exception" ){
+            echo "CD $result Error: {$obj->getMessage()}\n";
+        }else{
+            echo "CD $result \n";
+            var_dump($obj);
+        }
+    }
+}
+
 /**
  * Returns an authorized API client.
  * @return Google_Client the authorized client object
