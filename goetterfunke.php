@@ -27,48 +27,42 @@ switch($cliAction){
         //get a delta
         $currentCDconfiguration = getCustomDimensions($analyticsService,$account,$property);
         $targetCDconfiguration = json_decode(file_get_contents(__DIR__ . '/' . $cliParam),true);
-
+        
         $change = configDiffGenerator($currentCDconfiguration,$targetCDconfiguration);
-        var_dump($change);
-        $client->setUseBatch(true);
-        $maxBatchSize = 5;
 
         while($change->valid()){
-
-            $requests = [];
-            for ($i=0; $i < $maxBatchSize and $change->valid(); $i++) { 
-                $cd = $change->current();
+            $target = $change->current();
+            echo ">--\nsending change\n";
+            try{
                 if($change->key() == 'patch'){
-                    
-                    $requests[$cd->getIndex()] = $analyticsService->management_customDimensions->patch($account, $property, ('ga:dimension' . $cd->getIndex()),$cd);
+                    $result = $analyticsService->management_customDimensions->patch($account, $property, ('ga:dimension' . $target->getIndex()),$target);
                 }else{
-                    $requests[$cd->getIndex()] = $analyticsService->management_customDimensions->insert($account, $property, $cd);
+                    $result = $analyticsService->management_customDimensions->insert($account, $property, $target);
                 }
-                $change->next();
+                //var_dump($result);
+            } catch (apiServiceException $e) {
+                print 'There was an Analytics API service error '
+                        . $e->getCode() . ':' . $e->getMessage();
+            } catch (apiException $e) {
+                print 'There was a general API error '
+                        . $e->getCode() . ':' . $e->getMessage();
             }
 
-            do{
-                echo "create new batch \n";
-                $batch = $analyticsService->createBatch();
-                foreach($requests as $index => $request){
-                    $batch->add($request, $index);
-                }
-                $results = $batch->execute();
-                foreach ($results as $result => $obj) {
-                    $index = substr($result, 9);
-                    if(get_class($obj) !== "Google_Service_Exception" ){
-                        unset($requests[$index]);
-                        echo "CD $index ok\n";
-                        var_dump($obj);
-                    }else{
-                        $msg = json_decode($obj->getMessage());
-                        echo "Retry CD $index:{$obj->getMessage()}\n";
-                        sleep(3);
-                    }
-                }
-            }while(count($requests)>0);
-            echo "Section completed Successfully.\n\n";
+            echo ">>- Double Checking ga:dimension{$target->getIndex()} - (response index {$result->getIndex()}):\n";
+            echo "Active {$result->getActive()} == {$target->getActive()}\n";
+            echo "Name '{$result->getName()}' == '{$target->getName()}'\n";
+            echo "Scope '{$result->getScope()}' == '{$target->getScope()}'\n";
+            if( $result->getActive() == $target->getActive() and
+				$result->getName()   == $target->getName() and
+				$result->getScope()  == $target->getScope()){
+                echo ">>> update seems good. next! \n\n";
+                $change->next();
+            }else{
+                echo ">>> update did not work. try again \n\n";
+            }
+            //sleep(1);
         }
+        echo "\nDone.\n";
     break;
     case 'listProperties':
         listProperties($analyticsService);

@@ -10,6 +10,7 @@ function arrayToDimensionObject($arr){
 	$cd->setScope($arr['scope']);
 	$cd->setActive($arr['active']);
 	$cd->setIndex($arr['index']);
+	$cd->setName($arr['name']);
 	return $cd;
 }
 
@@ -19,16 +20,18 @@ function configDiffGenerator($currentCDconfiguration,$targetCDconfiguration){
 		$index = $cd->getIndex();
 		$targetCDIndex = $index-1; //because unlike Analytic's CDs, arrays are 0 based
 		$changeset = [];
-		
+		echo "--- checking CD {$index}\n";
 		if(!array_key_exists($targetCDIndex, $targetCDconfiguration)){
 			//this CD should not be active
 			if($cd->getActive()){
 				$cd->setActive(false);
-				echo "Deactivate ga:dimension$index\n";
+				$cd->setName('-not in use-');
+				echo "Deactivate ga:dimension$index\nSet Name to: -not in use-";
 				yield 'patch' => $cd;
 			}
 		}else{
 			$target = $targetCDconfiguration[$targetCDIndex];
+			$target['scope'] = strtoupper($target['scope']);
 
 			if($target['index'] != $index){
 				var_dump($should);
@@ -40,9 +43,9 @@ function configDiffGenerator($currentCDconfiguration,$targetCDconfiguration){
 			if( $cd->getActive() != $target['active'] or
 				$cd->getName()   != $target['name'] or
 				$cd->getScope()  != $target['scope']){
-					echo "Update ga:dimension$index: {$cd->getActive()} to {$target['active']}, ";
-					echo "{$cd->getName()} to {$target['name']}, ";
-					echo "{$cd->getScope()} to {$target['scope']}\n";
+					echo "Update ga:dimension$index: Active({$cd->getActive()}) to {$target['active']}\n";
+					echo "Name '{$cd->getName()}' to '{$target['name']}'\n";
+					echo "Scope '{$cd->getScope()}' to '{$target['scope']}'\n";
 					yield 'patch' => arrayToDimensionObject($target);
 			}
 			// remove dimension from known dimensions so its easy to add any remaning after this loop
@@ -51,6 +54,11 @@ function configDiffGenerator($currentCDconfiguration,$targetCDconfiguration){
 	}
 	// any non-removed target configurations left?
 	foreach($targetCDconfiguration as $target){
-		yield 'insert' => arrayToDimensionObject($target);
+		$target = arrayToDimensionObject($target);
+		echo "Create as new CD {$target->getIndex()}\n";
+		echo "Name '{$target->getName()}\n";
+		echo "Scope '{$target->getScope()}\n";
+
+		yield 'insert' => $target;
 	}
 }
