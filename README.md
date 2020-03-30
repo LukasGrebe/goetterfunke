@@ -1,28 +1,48 @@
 Götterfunke
 ==============
 
-Google Analytics Code as Configuration
+Automate some Google Analytics (GA) Management Tasks
 
-Setup:
+Currently supports GA Custom Dimensions:
 
-1. Run ```composer install``` to install Dependancies
-1. Follow the instructions to [Create a Service Account](https://developers.google.com/api-client-library/php/auth/service-accounts#creatinganaccount)
-2. Download the JSON credentials to ```./credentials/Goetterfunke.json```
-3. Add the Service Account Email to your Analytics Account with the necessary rights
+- Read out GA CD Configuration as JSON
+- Update GA CD Configuration from JSON
 
+## Usage
 
-# CD setup
-An Active CD is any string that does not include the substring "inactive"
-
-https://<your Confluence>/rest/masterdetail/1.0/detailssummary/lines?cql=label%3D<your ga_custom_dimension label>&spaceKey=<your confluence Space Key>&pageSize=300&pageIndex=0&headings=Scope,Status,Index
-
-save as confluence .json
-using https://stedolan.github.io/jq/
-`jq '.detailLines | map({"name": .title, "scope": (.details[0] | gsub("<[^>]+>";"")),"status": (.details[1] | gsub("<[^>]+>";"")), "index": ((.details[2] | gsub("<[^>]+>";""))|tonumber)}) | sort_by(.index)' < confluence.json > target.json`
+- `php goetterfunke.php listProperties` to list <account id> <property id> <property name>. Copy-Paste a pair of account & property ID as params to the following commands.
+- `php goetterfunke.php getCDsJSON <account id> <property id>` to output a property's custom dimension configuration as JSON. (Use `[jq](https://stedolan.github.io/jq/) 'map({index,name,scope,active})'` to remove unnecessary properties)
+- `php goetterfunke.php setCDs <account id> <property id> <config.json>` to update the custom dimension configuration to a the given config json. The JSON Content Structure must match the output of `getCDsJSON`
 
 
+## Setup Götterfunke
 
-# List CDs
+1. Download source or clone repository.
+1. Run `composer install` to install Dependancies
+1. Setup Google API oAuth:
+  1. place the `auth.php` on your php webserver or use `https://lukas.grebe.me/goetterfunke/auth.php`
+  1. Follow the instructions to [Setup oAuth](https://support.google.com/cloud/answer/6158849?hl=en) - create `web application` type OAuth 2.0 Client Credentials, and setup the URL of `auth.php`
+  2. place the generated credentials json file in `/credentials/`
+  3. update `goetterfunke.php` with the name of your Credentials file and location of your auth.php copy in lin 5 `$client = getClient('<your json>','<your auth.php>');`
 
-then run 
-`jq 'map({index,name,scope,active})'`
+## Working with Custom Dimension JSON
+### Quick Start
+1. get the current configuration from a Property using `php goetterfunke.php getCDsJSON <account id> <property id> | jq 'map({index,name,scope,active})' > current.json`
+`)
+2. Modify and save `current.json`
+3. update any property Setup with `setCDs <account id> <property id> current.json`
+
+### Working with confluence
+
+If you are using Confluences [Page Properties Macro](https://confluence.atlassian.com/doc/page-properties-macro-184550024.html) you can
+
+_This assumes your Confluence Page Name is the name of your Custom Dimension as to be set in Analytics and have the Page Keys `Scope`,`Index`,`Status` where any Status value that does not include `inactive` will be set as __Active__ in Google Analytics._
+
+1. read out page properties as JSON via the API `https://<your Confluence>/rest/masterdetail/1.0/detailssummary/lines?cql=label%3D<your ga_custom_dimension Page label>&spaceKey=<your confluence Space Key>&pageSize=300&pageIndex=0&headings=Scope,Status,Index`
+2. transform the JSON to be usable with Götterfunke: `jq '.detailLines | map({"name": .title, "scope": (.details[0] | gsub("<[^>]+>";"")),"active": (.details[1] | gsub("<[^>]+>";"") | contains("inactive") | not), "index": ((.details[2] | gsub("<[^>]+>";""))|tonumber)}) | sort_by(.index)' < confluence.json > target-from-confluence.json`
+3. set CDs with `php goetterfunke.php setCDs <account id> <property id> target-from-confluence.json`
+
+## Note
+
+- feel free to get in touch via Github Issues or [twitter](https://twitter.com/LukasGrebe)
+- This code is SUPER scrappy and has lots of smell and other issues. Works for me 🤷‍♂️ - see above

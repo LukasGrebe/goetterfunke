@@ -15,7 +15,6 @@ function arrayToDimensionObject($arr){
 }
 
 function configDiffGenerator($currentCDconfiguration,$targetCDconfiguration){
-	echo "hello world\n";
 	foreach ($currentCDconfiguration as $cd) {
 		$index = $cd->getIndex();
 		$targetCDIndex = $index-1; //because unlike Analytic's CDs, arrays are 0 based

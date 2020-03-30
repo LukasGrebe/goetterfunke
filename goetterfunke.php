@@ -4,8 +4,6 @@ error_reporting(E_ALL);
 
 if (php_sapi_name() != 'cli') {
     throw new Exception('This application must be run on the command line.');
-}else{
-    echo "hi\n";
 }
 
 require 'vendor/autoload.php';
@@ -13,11 +11,13 @@ require_once 'getClient.php';
 require_once 'list.php';
 require_once 'customDimensions.php';
 
-$client = getClient('client_credentials.json');
+$client = getClient('client_credentials.json','https://lukas.grebe.me/goetterfunke/auth.php');
 $analyticsService = new Google_Service_Analytics($client);
 
+error_reporting(E_ALL & ~E_NOTICE);
 list($file,$cliAction,$account,$property,$cliParam) = $argv;
-echo "hello {$cliAction}\n";
+error_reporting(E_ALL);
+
 switch($cliAction){
     case 'getCDsJSON':
         $customDimensions = getCustomDimensions($analyticsService,$account,$property);
@@ -71,7 +71,7 @@ switch($cliAction){
         echo "unknown Action {$cliAction}\n";
         echo "use\n";
         echo "listProperties\n";
-        echo "getCDsJSON <account> <property>\n";
-        echo "setCDs <account> <property> <config.json>\n";
+        echo "getCDsJSON <account id> <property id>\n";
+        echo "setCDs <account id> <property id> <config.json>\n";
 }
 
