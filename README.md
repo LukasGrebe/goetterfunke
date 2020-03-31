@@ -11,7 +11,7 @@ Currently supports GA Custom Dimensions:
 ## Usage
 
 - `php goetterfunke.php listProperties` to list <account id> <property id> <property name>. Copy-Paste a pair of account & property ID as params to the following commands.
-- `php goetterfunke.php getCDsJSON <account id> <property id>` to output a property's custom dimension configuration as JSON. (Use `[jq](https://stedolan.github.io/jq/) 'map({index,name,scope,active})'` to remove unnecessary properties)
+- `php goetterfunke.php getCDsJSON <account id> <property id>` to output a property's custom dimension configuration as JSON. (Use `jq 'map({index,name,scope,active})'` to remove unnecessary properties - see [jq](https://stedolan.github.io/jq/))
 - `php goetterfunke.php setCDs <account id> <property id> <config.json>` to update the custom dimension configuration to a the given config json. The JSON Content Structure must match the output of `getCDsJSON`
 
 
@@ -20,17 +20,16 @@ Currently supports GA Custom Dimensions:
 1. Download source or clone repository.
 1. Run `composer install` to install Dependancies
 1. Setup Google API oAuth:
-  1. place the `auth.php` on your php webserver or use `https://lukas.grebe.me/goetterfunke/auth.php`
-  1. Follow the instructions to [Setup oAuth](https://support.google.com/cloud/answer/6158849?hl=en) - create `web application` type OAuth 2.0 Client Credentials, and setup the URL of `auth.php`
-  2. place the generated credentials json file in `/credentials/`
-  3. update `goetterfunke.php` with the name of your Credentials file and location of your auth.php copy in lin 5 `$client = getClient('<your json>','<your auth.php>');`
+    1. place the `auth.php` on your php webserver or use `https://lukas.grebe.me/goetterfunke/auth.php`
+    1. Follow the instructions to [Setup oAuth](https://support.google.com/cloud/answer/6158849?hl=en) - create `web application` type OAuth 2.0 Client Credentials, and setup the URL of `auth.php`
+    2. place the generated credentials json file in `/credentials/`
+    3. update `goetterfunke.php` with the name of your Credentials file and location of your auth.php copy in lin 5 `$client = getClient('<your json>','<your auth.php>');`
 
 ## Working with Custom Dimension JSON
 ### Quick Start
 1. get the current configuration from a Property using `php goetterfunke.php getCDsJSON <account id> <property id> | jq 'map({index,name,scope,active})' > current.json`
-`)
 2. Modify and save `current.json`
-3. update any property Setup with `setCDs <account id> <property id> current.json`
+3. update any property setup with `setCDs <account id> <property id> current.json`
 
 ### Working with confluence
 
