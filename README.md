@@ -20,7 +20,7 @@ Currently supports GA Custom Dimensions:
 1. Download source or clone repository.
 1. Run `composer install` to install Dependancies
 1. Setup Google API oAuth:
-  1. place the `auth.php` on your php webserver or use `https://lukas.grebe.me/goetterfunke/auth.php`
+  1. place the `auth.html` on your webserver or use `https://lukas.grebe.me/goetterfunke/auth/`
   1. Follow the instructions to [Setup oAuth](https://support.google.com/cloud/answer/6158849?hl=en) - create `web application` type OAuth 2.0 Client Credentials, and setup the URL of `auth.php`
   2. place the generated credentials json file in `/credentials/`
   3. update `goetterfunke.php` with the name of your Credentials file and location of your auth.php copy in lin 5 `$client = getClient('<your json>','<your auth.php>');`
