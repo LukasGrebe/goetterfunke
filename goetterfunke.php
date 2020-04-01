@@ -11,7 +11,7 @@ require_once 'getClient.php';
 require_once 'list.php';
 require_once 'customDimensions.php';
 
-$client = getClient('client_credentials.json','https://lukas.grebe.me/goetterfunke/auth.php');
+$client = getClient('client_credentials.json','https://lukas.grebe.me/goetterfunke/auth/');
 $analyticsService = new Google_Service_Analytics($client);
 
 error_reporting(E_ALL & ~E_NOTICE);
