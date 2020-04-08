@@ -42,6 +42,13 @@ _This assumes your Confluence Page Name is the name of your Custom Dimension as 
 2. transform the JSON to be usable with Götterfunke: `jq '.detailLines | map({"name": .title, "scope": (.details[0] | gsub("<[^>]+>";"")),"active": (.details[1] | gsub("<[^>]+>";"") | contains("inactive") | not), "index": ((.details[2] | gsub("<[^>]+>";""))|tonumber)}) | sort_by(.index)' < confluence.json > target-from-confluence.json`
 3. set CDs with `php goetterfunke.php setCDs <account id> <property id> target-from-confluence.json`
 
+### Setting lots of properties
+1. Save list of Properties to file `php goetterfunke.php listProperties > propertyList.csv`
+2. modify `propertyList.csv` to include relevant Properties
+3. Save a Backup of the current configuration `while read acc prop name; do php goetterfunke.php getCDsJSON $acc $prop | jq 'map({index,name,scope,active})' > "./backup/$prop $name.json"; done < propertyList.csv`
+4. Update configurations `while read acc prop name; do php goetterfunke.php setCDs $acc $prop <config.json> | tee "./update/$prop $name.log"; done < propertyList.csv`
+
+
 ## Note
 
 - feel free to get in touch via Github Issues or [twitter](https://twitter.com/LukasGrebe)

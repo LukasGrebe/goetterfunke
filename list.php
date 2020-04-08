@@ -1,7 +1,6 @@
 <?php
 
 function listProperties($service){
-  echo "All Properties for Users Account:";
 	$properties = $service->management_webproperties->listManagementWebproperties('~all');
 	foreach ($properties->getItems() as $property) {
 		echo $property->getAccountId() . ' ' . $property->getId() . ' ' . $property->getName() . "\n";
