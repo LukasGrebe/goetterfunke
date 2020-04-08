@@ -24,7 +24,7 @@ switch($cliAction){
         print json_encode($customDimensions,JSON_PRETTY_PRINT);
     break;
     case 'setCDs': 
-        //get a delta
+        echo "\n#######\nUpdating $account $property\n";
         $currentCDconfiguration = getCustomDimensions($analyticsService,$account,$property);
         $targetCDconfiguration = json_decode(file_get_contents(__DIR__ . '/' . $cliParam),true);
         
@@ -40,12 +40,11 @@ switch($cliAction){
                     $result = $analyticsService->management_customDimensions->insert($account, $property, $target);
                 }
                 //var_dump($result);
-            } catch (apiServiceException $e) {
-                print 'There was an Analytics API service error '
-                        . $e->getCode() . ':' . $e->getMessage();
-            } catch (apiException $e) {
-                print 'There was a general API error '
-                        . $e->getCode() . ':' . $e->getMessage();
+            } catch(Google_Service_Exception $e){
+                fwrite(STDERR, "Googel Service Exception: ({$e->getCode()}) {$e->getMessage()}\n");
+                echo ">>> update CD {$target->getIndex()} \033[31m failed\033[0m . See stderr output \n\n";
+                $change->next();
+                continue;
             }
 
             echo ">>- Double Checking ga:dimension{$target->getIndex()} - (response index {$result->getIndex()}):\n";
@@ -54,11 +53,11 @@ switch($cliAction){
             echo "Scope '{$result->getScope()}' == '{$target->getScope()}'\n";
             if( $result->getActive() == $target->getActive() and
 				$result->getName()   == $target->getName() and
-				$result->getScope()  == $target->getScope()){
-                echo ">>> update seems good. next! \n\n";
+				$result->getScope()  == strtoupper($target->getScope())){
+                echo ">>> update CD {$target->getIndex()} seems \033[32m good\033[0m. next! \n\n";
                 $change->next();
             }else{
-                echo ">>> update did not work. try again \n\n";
+                echo ">>> update CD {$target->getIndex()} did not work. \033[33m try again\033[0m \n\n";
             }
             //sleep(1);
         }
