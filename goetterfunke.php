@@ -24,7 +24,7 @@ switch($cliAction){
         print json_encode($customDimensions,JSON_PRETTY_PRINT);
     break;
     case 'setCDs': 
-        echo "\n#######\nUpdating $account $property\n";
+        echo "\n#######\nWorking with $account $property\n";
         $currentCDconfiguration = getCustomDimensions($analyticsService,$account,$property);
         $targetCDconfiguration = json_decode(file_get_contents(__DIR__ . '/' . $cliParam),true);
         
@@ -32,7 +32,7 @@ switch($cliAction){
 
         while($change->valid()){
             $target = $change->current();
-            echo ">--\nsending change\n";
+            echo "… ";
             try{
                 if($change->key() == 'patch'){
                     $result = $analyticsService->management_customDimensions->patch($account, $property, ('ga:dimension' . $target->getIndex()),$target);
@@ -41,23 +41,19 @@ switch($cliAction){
                 }
                 //var_dump($result);
             } catch(Google_Service_Exception $e){
-                fwrite(STDERR, "Googel Service Exception: ({$e->getCode()}) {$e->getMessage()}\n");
-                echo ">>> update CD {$target->getIndex()} \033[31m failed\033[0m . See stderr output \n\n";
+                echo ">>> \033[31mfailed\033[0m ({$e->getCode()})\n{$e->getMessage()}\n\n\n";                
                 $change->next();
                 continue;
             }
 
-            echo ">>- Double Checking ga:dimension{$target->getIndex()} - (response index {$result->getIndex()}):\n";
-            echo "Active {$result->getActive()} == {$target->getActive()}\n";
-            echo "Name '{$result->getName()}' == '{$target->getName()}'\n";
-            echo "Scope '{$result->getScope()}' == '{$target->getScope()}'\n";
+            echo "> double checking (index {$result->getIndex()}) > ";
             if( $result->getActive() == $target->getActive() and
 				$result->getName()   == $target->getName() and
 				$result->getScope()  == strtoupper($target->getScope())){
-                echo ">>> update CD {$target->getIndex()} seems \033[32m good\033[0m. next! \n\n";
+                echo "\033[32mok\033[0m\n";
                 $change->next();
             }else{
-                echo ">>> update CD {$target->getIndex()} did not work. \033[33m try again\033[0m \n\n";
+                echo "\033[33mretry\033[0m ";
             }
             //sleep(1);
         }
