@@ -27,35 +27,45 @@ switch($cliAction){
         echo "\n#######\nWorking with $account $property\n";
         $currentCDconfiguration = getCustomDimensions($analyticsService,$account,$property);
         $targetCDconfiguration = json_decode(file_get_contents(__DIR__ . '/' . $cliParam),true);
-        
+
+        $client->setUseBatch(true);
+        $batchSize = 4;
+
         $change = configDiffGenerator($currentCDconfiguration,$targetCDconfiguration);
 
         while($change->valid()){
-            $target = $change->current();
-            echo "… ";
-            try{
+            $batch = $analyticsService->createBatch();
+            for ($i=0; $i < $batchSize and $change->valid(); $i++) { 
+                $target = $change->current();
+                
                 if($change->key() == 'patch'){
-                    $result = $analyticsService->management_customDimensions->patch($account, $property, ('ga:dimension' . $target->getIndex()),$target);
+                    $batch->add($analyticsService->management_customDimensions->patch($account, $property, ('ga:dimension' . $target->getIndex()),$target),$target->getIndex());
                 }else{
-                    $result = $analyticsService->management_customDimensions->insert($account, $property, $target);
+                    $batch->add($analyticsService->management_customDimensions->insert($account, $property, $target),$target->getIndex());
                 }
-                //var_dump($result);
-            } catch(Google_Service_Exception $e){
-                echo ">>> \033[31mfailed\033[0m ({$e->getCode()})\n{$e->getMessage()}\n\n\n";                
+                echo "-> \033[33mbatched\033[0m\n";
                 $change->next();
-                continue;
             }
+            echo "\nsending batch: ";
+            $results = $batch->execute();
+            foreach ($results as $index => $result){
+                if(get_class($result) === 'Google_Service_Analytics_CustomDimension'){
+                    echo "CD$index: \033[32mok\033[0m ";
+                }else{
+                    //assuming Error Result
+                    $err = $result->getErrors()[0];
+                    switch($result->getCode()){
+                        case 400:
+                            echo "\nCD$index: \033[31mfailed\033[0m ({$result->getCode()} {$err['reason']}): {$err['message']}\n";
+                        break;
+                        case 403:
+                            echo "\nCD$index: \033[31mfailed\033[0m ({$result->getCode()} {$err['reason']}): {$err['message']}\n";
+                            die();
 
-            echo "> double checking (index {$result->getIndex()}) > ";
-            if( $result->getActive() == $target->getActive() and
-				$result->getName()   == $target->getName() and
-				$result->getScope()  == strtoupper($target->getScope())){
-                echo "\033[32mok\033[0m\n";
-                $change->next();
-            }else{
-                echo "\033[33mretry\033[0m ";
+                    }
+                }
             }
-            //sleep(1);
+            sleep(1); //1.5 Queries per second max
         }
         echo "\nDone.\n";
     break;
