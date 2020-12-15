@@ -39,7 +39,7 @@ If you are using Confluences [Page Properties Macro](https://confluence.atlassia
 _This assumes your Confluence Page Name is the name of your Custom Dimension as to be set in Analytics and have the Page Keys `Scope`,`Index`,`Status` where any Status value that does not include `inactive` will be set as __Active__ in Google Analytics._
 
 1. read out page properties as JSON via the API `https://<your Confluence>/rest/masterdetail/1.0/detailssummary/lines?cql=label%3D<your ga_custom_dimension Page label>&spaceKey=<your confluence Space Key>&pageSize=300&pageIndex=0&headings=Scope,Status,Index`
-2. transform the JSON to be usable with Götterfunke: `jq '.detailLines | map({"name": .title, "scope": (.details[0] | gsub("<[^>]+>";"")),"active": (.details[1] | gsub("<[^>]+>";"") | contains("inactive") | not), "index": ((.details[2] | gsub("<[^>]+>";""))|tonumber)}) | sort_by(.index)' < confluence.json > target-from-confluence.json`
+2. transform the JSON to be usable with Götterfunke: `jq '.detailLines | map({"index": ((.details[2] | gsub("<[^>]+>";""))|tonumber), "name": .title, "scope": (.details[0] | gsub("<[^>]+>";"") | ascii_upcase),"active": (.details[1] | gsub("<[^>]+>";"") | contains("inactive") | not), }) | sort_by(.index)' < confluence.json > > target-from-confluence.json`
 3. set CDs with `php goetterfunke.php setCDs <account id> <property id> target-from-confluence.json`
 
 ### Setting lots of properties
