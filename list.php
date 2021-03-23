@@ -30,7 +30,6 @@ function listAccounts(){
   Account name = {$account->getName()}
   Created      = {$account->getCreated()}
   Updated      = {$account->getUpdated()}
-
-  OUT;
+OUT;
   }
 }
